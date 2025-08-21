@@ -1,15 +1,64 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"   // MariaDB uses mysql provider
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  name      String?   @db.VarChar(191)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  lessons   Lesson[]
+}
+
+enum LessonStatus {
+  DRAFT
+  GENERATING
+  READY
+  FAILED
+}
+
+model Lesson {
+  id           Int          @id @default(autoincrement())
+  title        String
+  ownerId      Int?
+  owner        User?        @relation(fields: [ownerId], references: [id])
+  grade        String?      @db.VarChar(64)
+  subject      String?      @db.VarChar(64)
+  topic        String?      @db.VarChar(191)
+  status       LessonStatus @default(DRAFT)
+  slidesJson   Json?
+  pptxUrl      String?      @db.VarChar(512)
+  thumbnailUrl String?      @db.VarChar(512)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model LibraryItem {
+  id         Int       @id @default(autoincrement())
+  extId      String?   @unique      @db.VarChar(191) // optional external id from CSV
+  slug       String    @unique      @db.VarChar(191) // URL-safe slug
+  title      String                              
+  grade      String?   @db.VarChar(64)
+  subject    String?   @db.VarChar(64)
+  topic      String?   @db.VarChar(191)
+  subTopic   String?   @db.VarChar(191)
+  summary    String?   @db.Text
+  thumbUrl   String?   @db.VarChar(512)
+  viewUrl    String?   @db.VarChar(512)
+  pptxUrl    String?   @db.VarChar(512)
+  pdfUrl     String?   @db.VarChar(512)
+  slidesUrl  String?   @db.VarChar(512)
+  metaTitle  String?   @db.VarChar(191)
+  metaDesc   String?   @db.VarChar(512)
+  rating     Float?    @default(0)
+  reviews    Int?      @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
