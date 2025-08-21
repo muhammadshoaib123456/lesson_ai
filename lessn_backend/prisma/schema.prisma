@@ -14,7 +14,9 @@ model User {
   name      String?   @db.VarChar(191)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  lessons   Lesson[]
+
+  lessons        Lesson[]
+  resetTokens    PasswordResetToken[]
 }
 
 enum LessonStatus {
@@ -28,7 +30,7 @@ model Lesson {
   id           Int          @id @default(autoincrement())
   title        String
   ownerId      Int?
-  owner        User?        @relation(fields: [ownerId], references: [id])
+  owner        User?        @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   grade        String?      @db.VarChar(64)
   subject      String?      @db.VarChar(64)
   topic        String?      @db.VarChar(191)
@@ -42,9 +44,9 @@ model Lesson {
 
 model LibraryItem {
   id         Int       @id @default(autoincrement())
-  extId      String?   @unique      @db.VarChar(191) // optional external id from CSV
-  slug       String    @unique      @db.VarChar(191) // URL-safe slug
-  title      String                              
+  extId      String?   @unique      @db.VarChar(191)
+  slug       String    @unique      @db.VarChar(191)
+  title      String
   grade      String?   @db.VarChar(64)
   subject    String?   @db.VarChar(64)
   topic      String?   @db.VarChar(191)
@@ -61,4 +63,23 @@ model LibraryItem {
   reviews    Int?      @default(0)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+
+  @@index([grade])
+  @@index([subject])
+  @@index([grade, subject])
+  // If your MySQL/MariaDB supports it, uncomment to speed text search:
+  // @@fulltext([title, topic, subTopic, summary])
+}
+
+model PasswordResetToken {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique @db.VarChar(191)
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
